@@ -1,0 +1,17 @@
+<html xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/html">
+<body>
+<h1>Result</h1>
+<table>
+    <tr>
+        <th>제목</th>
+        <th>본문</th>
+        <th>작성자</th>
+    </tr>
+    <tr th:each="blog : ${blogs}">
+        <td th:text="${blog.title}">제목</td>
+        <td th:text="${blog.content}">본문</td>
+        <td th:text="${blog.owner}">작성자</td>
+    </tr>
+</table>
+</body>
+</html>
