@@ -1,15 +1,15 @@
-package com.ubivelox.innovation.standard.common;
+package com.ymwoo.project.common;
 
-import static java.util.stream.Collectors.toList;
-
-import java.util.List;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.repository.query.QueryByExampleExecutor;
 
-public class CommonRestService<ID, Entity extends AbstractObject, Search extends AbstractSearch, BaseRepository extends JpaRepository<Entity, ID> & SearchRepository<Entity, Search>>
+public class CommonRestService<ID, Entity extends AbstractObject, Search extends AbstractSearch, BaseRepository extends PagingAndSortingRepository<Entity, ID> & QueryByExampleExecutor<Entity> & SearchRepository<Entity, Search>>
         extends AbstractRestService<Entity, Search> implements InitializingBean
 {
     @Autowired
@@ -40,7 +40,7 @@ public class CommonRestService<ID, Entity extends AbstractObject, Search extends
         if ( Optional.ofNullable(entityData.getId())
                      .isPresent() )
         {
-            throw new RuntimeException("ID is exsist.");
+            throw new RuntimeException("You must not have an ID.");
         }
 
         // 전 처리
@@ -50,9 +50,10 @@ public class CommonRestService<ID, Entity extends AbstractObject, Search extends
         {
             entityData = preEntity;
         }
+        entityData.setCreatedDateTime(LocalDateTime.now());
 
         // DB process
-        Entity resource = this.baseRepository.save(entity);
+        Entity resource = this.baseRepository.save(entityData);
 
         // 후 처리
         Entity postEntity = this.instance.postPostProcess(resource);
@@ -76,7 +77,7 @@ public class CommonRestService<ID, Entity extends AbstractObject, Search extends
         if ( Optional.ofNullable(entityData.getId())
                      .isEmpty() )
         {
-            throw new RuntimeException("ID is null.");
+            throw new RuntimeException("ID does not exist.");
         }
 
         // 전 처리
@@ -102,7 +103,7 @@ public class CommonRestService<ID, Entity extends AbstractObject, Search extends
 
 
     @Override
-    public List<Entity> getList(Search search)
+    public Page<Entity> getList(Search search)
     {
         Search searchData = search;
 
@@ -115,22 +116,20 @@ public class CommonRestService<ID, Entity extends AbstractObject, Search extends
         }
 
         // DB process
-        List<Entity> resources = this.baseRepository.search(searchData);
+        Page<Entity> response = this.baseRepository.search(searchData)
+                                                   .map(content -> {
+                                                       Entity contentData = (Entity) content;
+                                                       // 후처리
+                                                       Entity postContent = this.instance.getListPostProcess(contentData);
+                                                       if ( Optional.ofNullable(postContent)
+                                                                    .isPresent() )
+                                                       {
+                                                           contentData = postContent;
+                                                       }
+                                                       return contentData;
+                                                   });
 
-        List<Entity> result = resources.stream()
-                                       .map(resource -> {
-                                           // 후처리
-                                           Entity postEntity = this.instance.getListPostProcess(resource);
-                                           if ( Optional.ofNullable(postEntity)
-                                                        .isPresent() )
-                                           {
-                                               resource = postEntity;
-                                           }
-                                           return resource;
-                                       })
-                                       .collect(toList());
-
-        return result;
+        return response;
     }
 
 
@@ -145,11 +144,18 @@ public class CommonRestService<ID, Entity extends AbstractObject, Search extends
         if ( Optional.ofNullable(entityData.getId())
                      .isEmpty() )
         {
-            throw new RuntimeException("ID is null.");
+            throw new RuntimeException("ID does not exist.");
         }
 
+        // db 데이터 조회
         Optional<Entity> optional = this.baseRepository.findById((ID) entityData.getId());
-        Entity oldData = optional.isEmpty() ? null : optional.get();
+        if ( optional.isEmpty() )
+        {
+            throw new RuntimeException("NOT_EXIST_DATA");
+        }
+        Entity oldData = optional.get();
+        oldData.setModifiedDateTime(LocalDateTime.now()); // modifyDate 현재 날짜로 변경
+        entityData.copyBaseProperties(oldData); // 기본 데이터 복사
 
         // 전 처리
         Entity preEntity = this.instance.putByIdPreProcess(oldData, entityData);
@@ -184,7 +190,7 @@ public class CommonRestService<ID, Entity extends AbstractObject, Search extends
         if ( Optional.ofNullable(entityData.getId())
                      .isEmpty() )
         {
-            throw new RuntimeException("ID is null.");
+            throw new RuntimeException("ID does not exist.");
         }
 
         // 전 처리
@@ -289,7 +295,7 @@ public class CommonRestService<ID, Entity extends AbstractObject, Search extends
 
 
 
-    protected List<Entity> getListCollectionPostProcess(Entity response)
+    protected Page<Entity> getListCollectionPostProcess(Page<Entity> response, Search search)
     {
         return null;
     }

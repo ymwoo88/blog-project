@@ -1,13 +1,15 @@
-package com.ubivelox.innovation.standard;
+package com.ymwoo.project;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class StandardApplicationTests {
+class StandardApplicationTests
+{
 
     @Test
-    void contextLoads() {
+    void contextLoads()
+    {
     }
 
 }

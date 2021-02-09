@@ -1,8 +1,8 @@
-package com.ubivelox.innovation.standard.blog;
+package com.ymwoo.project.blog;
 
 import org.springframework.stereotype.Service;
 
-import com.ubivelox.innovation.standard.common.CommonRestService;
+import com.ymwoo.project.common.CommonRestService;
 
 import lombok.RequiredArgsConstructor;
 

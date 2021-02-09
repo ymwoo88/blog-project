@@ -1,6 +1,6 @@
-package com.ubivelox.innovation.standard.service;
+package com.ymwoo.project.service;
 
-import java.util.List;
+import java.time.LocalDateTime;
 
 import javax.transaction.Transactional;
 
@@ -10,10 +10,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 
-import com.ubivelox.innovation.standard.blog.Blog;
-import com.ubivelox.innovation.standard.blog.BlogSearch;
-import com.ubivelox.innovation.standard.blog.BlogService;
+import com.ymwoo.project.blog.Blog;
+import com.ymwoo.project.blog.BlogSearch;
+import com.ymwoo.project.blog.BlogService;
 
 @SpringBootTest
 @Transactional
@@ -31,11 +32,14 @@ public class BlogServiceTest
         Blog blog1 = new Blog();
         blog1.setTitle("title1");
         blog1.setContent("content1");
+        blog1.setCreatedDateTime(LocalDateTime.now());
+        blog1.setOwner("admin");
         this.blog1 = blog1;
 
         Blog blog2 = new Blog();
         blog2.setTitle("title2");
         blog2.setContent("content2");
+        blog2.setCreatedDateTime(LocalDateTime.now());
         this.blog2 = blog2;
     }
 
@@ -68,13 +72,14 @@ public class BlogServiceTest
         Blog resource2 = this.blogService.post(this.blog2);
 
         // 검색 데이터 생성
-        BlogSearch blogSearch1 = BlogSearch.builder()
-                                           .build();
+        BlogSearch blogSearch = new BlogSearch();
+        blogSearch.setPage(0);
+        blogSearch.setSize(10);
 
         // 다건 검색
-        List<Blog> list1 = this.blogService.getList(blogSearch1);
+        Page<Blog> response = this.blogService.getList(blogSearch);
 
-        Assertions.assertEquals(2, list1.size());
+        Assertions.assertEquals(2, response.getTotalElements());
     }
 
 
@@ -90,9 +95,11 @@ public class BlogServiceTest
         System.out.println("saved blog content : " + blog.getContent());
 
         // 내용 변경 및 업데이트 진행
-        blog.setTitle("update title");
-        blog.setContent("update content");
-        Blog result = this.blogService.putById(blog);
+        Blog updateBlog = new Blog();
+        updateBlog.setId(blog.getId());
+        updateBlog.setTitle("update title");
+        updateBlog.setContent("update content");
+        Blog result = this.blogService.putById(updateBlog);
 
         // 업데이트 된 결과 로그
         System.out.println("updated blog title : " + blog.getTitle());

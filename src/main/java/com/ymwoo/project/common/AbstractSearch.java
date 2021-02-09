@@ -1,4 +1,4 @@
-package com.ubivelox.innovation.standard.common;
+package com.ymwoo.project.common;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -10,13 +10,13 @@ import org.thymeleaf.util.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
-@NoArgsConstructor
-@Data
-@SuperBuilder
+@Getter
+@Setter
+@RequiredArgsConstructor
 public abstract class AbstractSearch
 {
     private Long         id;

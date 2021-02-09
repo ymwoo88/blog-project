@@ -1,6 +1,6 @@
-package com.ubivelox.innovation.standard.common;
+package com.ymwoo.project.common;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
 
 public interface RestService<Entity, Search>
 {
@@ -16,7 +16,7 @@ public interface RestService<Entity, Search>
 
 
 
-    List<Entity> getList(Search search);
+    Page<Entity> getList(Search search);
 
 
 
