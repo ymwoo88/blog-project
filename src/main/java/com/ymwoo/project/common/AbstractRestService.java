@@ -1,4 +1,4 @@
-package com.ubivelox.innovation.standard.common;
+package com.ymwoo.project.common;
 
 public abstract class AbstractRestService<Entity, Search> implements RestService<Entity, Search>
 {

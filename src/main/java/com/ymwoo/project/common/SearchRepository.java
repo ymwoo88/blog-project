@@ -1,13 +1,12 @@
-package com.ubivelox.innovation.standard.common;
+package com.ymwoo.project.common;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
 import org.springframework.data.repository.NoRepositoryBean;
 
 @NoRepositoryBean
 public interface SearchRepository<Entity, Search extends AbstractSearch>
 {
-    List<Entity> search(Search search);
+    Page search(Search search);
 
 
 

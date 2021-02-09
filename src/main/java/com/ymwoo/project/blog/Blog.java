@@ -1,4 +1,4 @@
-package com.ubivelox.innovation.standard.blog;
+package com.ymwoo.project.blog;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -7,7 +7,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.validation.constraints.NotBlank;
 
-import com.ubivelox.innovation.standard.common.AbstractObject;
+import com.ymwoo.project.common.AbstractObject;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -28,10 +28,4 @@ public class Blog extends AbstractObject<Long>
     private String content;
 
     private int    hitCount;
-
-    @Override
-    public boolean isNew()
-    {
-        return false;
-    }
 }
