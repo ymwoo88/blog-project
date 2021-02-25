@@ -1,15 +1,11 @@
 package com.ymwoo.project.blog;
 
-import java.util.ArrayList;
+import static com.ymwoo.project.blog.QBlog.blog;
+import static org.springframework.util.ObjectUtils.isEmpty;
+
 import java.util.List;
-import java.util.Optional;
 
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -17,6 +13,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
+import com.querydsl.core.QueryResults;
+import com.querydsl.core.types.Order;
+import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.PathBuilder;
+import com.querydsl.jpa.impl.JPAQuery;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.ymwoo.project.common.SearchRepository;
 
 import lombok.extern.slf4j.Slf4j;
@@ -25,61 +28,55 @@ import lombok.extern.slf4j.Slf4j;
 @Repository
 public class BlogRepositoryImpl implements SearchRepository<Blog, BlogSearch>
 {
-    @PersistenceContext
-    private EntityManager em;
+    private final JPAQueryFactory queryFactory;
+
+    public BlogRepositoryImpl(EntityManager em)
+    {
+        this.queryFactory = new JPAQueryFactory(em);
+    }
+
+
+
+
 
     @Override
-    public Page search(BlogSearch search)
+    public List<Blog> searchList(BlogSearch search)
     {
-        CriteriaBuilder builder = this.em.getCriteriaBuilder();
-        CriteriaQuery<Blog> query = builder.createQuery(Blog.class);
-        Root<Blog> root = query.from(Blog.class);
+        return this.queryFactory.selectFrom(blog)
+                                .where(titleEq(search.getTitle()), contentEq(search.getContent()))
+                                .fetch();
+    }
 
-        // select from
-        query.select(root);
 
-        // where
-        List<Predicate> predicates = new ArrayList<>();
-        if ( Optional.ofNullable(search.getTitle())
-                     .isPresent() )
-        {
-            predicates.add(builder.equal(root.get("title"), search.getTitle()));
-        }
-        if ( Optional.ofNullable(search.getContent())
-                     .isPresent() )
-        {
-            predicates.add(builder.equal(root.get("content"), search.getContent()));
-        }
-        query.where(predicates.toArray(new Predicate[predicates.size()]));
 
-        // order by
-        search.extractSort()
-              .stream()
-              .forEach(sort -> {
-                  if ( Sort.Direction.ASC.equals(sort.getDirection()) )
-                  {
-                      query.orderBy(builder.asc(root.get(sort.getProperty())));
-                  }
-                  else
-                  {
-                      query.orderBy(builder.desc(root.get(sort.getProperty())));
-                  }
-              });
 
-        // 전체 조회 수
-        int totalElements = this.em.createQuery(query)
-                                   .getResultList()
-                                   .size();
 
-        // 검색 매칭 data 리스트
+    @Override
+    public Blog searchOne(BlogSearch search)
+    {
+        return this.queryFactory.selectFrom(blog)
+                                .where(titleEq(search.getTitle()), contentEq(search.getContent()))
+                                .fetchOne();
+    }
+
+
+
+
+
+    @Override
+    public Page<Blog> searchPage(BlogSearch search)
+    {
+        JPAQuery<Blog> query = this.queryFactory.selectFrom(blog)
+                                                .where(titleEq(search.getTitle()), contentEq(search.getContent()));
+
         Pageable pageable = search.getPageable();
-        List<Blog> resultList = this.em.createQuery(query)
-                                       .setFirstResult(Long.valueOf(pageable.getOffset())
-                                                           .intValue())
-                                       .setMaxResults(pageable.getPageSize())
-                                       .getResultList();
+        extractedSort(query, pageable);
 
-        return new PageImpl(resultList, pageable, totalElements);
+        QueryResults<Blog> results = query.offset(pageable.getOffset())
+                                          .limit(pageable.getPageSize())
+                                          .fetchResults();
+
+        return new PageImpl<>(results.getResults(), pageable, results.getTotal());
     }
 
 
@@ -89,10 +86,9 @@ public class BlogRepositoryImpl implements SearchRepository<Blog, BlogSearch>
     @Override
     public Long count(BlogSearch search)
     {
-        return this.search(search)
-                   .getContent()
-                   .stream()
-                   .count();
+        return this.queryFactory.selectFrom(blog)
+                                .where(titleEq(search.getTitle()), contentEq(search.getContent()))
+                                .fetchCount();
     }
 
 
@@ -102,9 +98,37 @@ public class BlogRepositoryImpl implements SearchRepository<Blog, BlogSearch>
     @Override
     public Boolean exists(BlogSearch search)
     {
-        return this.search(search)
-                   .getContent()
-                   .stream()
-                   .count() > 0;
+        return count(search) > 0;
+    }
+
+
+
+
+
+    private BooleanExpression titleEq(String title)
+    {
+        return isEmpty(title) ? null : blog.title.eq(title);
+    }
+
+
+
+
+
+    private BooleanExpression contentEq(String content)
+    {
+        return isEmpty(content) ? null : blog.content.eq(content);
+    }
+
+
+
+
+
+    private void extractedSort(JPAQuery<Blog> query, Pageable pageable)
+    {
+        for ( Sort.Order o : pageable.getSort() )
+        {
+            PathBuilder<Blog> pathBuilder = new PathBuilder<Blog>(blog.getType(), blog.getMetadata());
+            query.orderBy(new OrderSpecifier(o.isAscending() ? Order.ASC : Order.DESC, pathBuilder.get(o.getProperty())));
+        }
     }
 }
