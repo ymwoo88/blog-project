@@ -116,7 +116,7 @@ public class CommonRestService<ID, Entity extends AbstractObject, Search extends
         }
 
         // DB process
-        Page<Entity> response = this.baseRepository.search(searchData)
+        Page<Entity> response = this.baseRepository.searchPage(searchData)
                                                    .map(content -> {
                                                        Entity contentData = (Entity) content;
                                                        // 후처리
