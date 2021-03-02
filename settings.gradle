@@ -1,1 +1,5 @@
 rootProject.name = 'standard'
+include 'module-common'
+include 'module-jpa'
+include 'module-web'
+
