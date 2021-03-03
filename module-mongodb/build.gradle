@@ -1,0 +1,46 @@
+plugins {
+    id 'java'
+    id "com.ewerk.gradle.plugins.querydsl" version "1.0.10"
+}
+
+group 'com.ymwoo.project'
+version '0.0.1-SNAPSHOT'
+
+bootJar {
+    enabled = false
+}
+
+jar {
+    enabled = true
+}
+
+dependencies {
+}
+
+//querydsl 추가 시작
+def querydslSrcDir = "$buildDir/generated/querydsl"
+
+querydsl {
+    springDataMongo = true
+    querydslSourcesDir = querydslSrcDir
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main/java', querydslSrcDir]
+        }
+    }
+}
+
+compileQuerydsl {
+    options.annotationProcessorPath = configurations.querydsl
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+    querydsl.extendsFrom compileClasspath
+}
+//querydsl 추가 끝

@@ -7,6 +7,8 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.ymwoo.project.blog.Blog;
+import com.ymwoo.project.blog.BlogSearch;
 import com.ymwoo.project.common.SearchRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
