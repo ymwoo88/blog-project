@@ -1,0 +1,13 @@
+spring:
+  data:
+    mongodb:
+      database: blog-test
+      uri: mongodb://127.0.0.1:27017,127.0.0.1:27018,127.0.0.1:27019/?replicaSet=rs0&connectTimeoutMS=5000&waitQueueMultiple=50
+      grid-fs-database: gridFs
+      max-connection-idle-time: 30000
+      min-connections-per-host: 30
+      connections-per-host: 500
+
+logging:
+  level:
+    org.hibernate.SQL: debug

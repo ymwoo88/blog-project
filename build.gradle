@@ -1,3 +1,6 @@
+def dbType = ":module-jpa"
+//def dbType = ":module-mongodb"
+
 buildscript {
     ext {
         springBootVersion = '2.1.4.RELEASE'
@@ -31,8 +34,12 @@ subprojects {
 
     // 모든 모듈에서 사용하는 라이브러리
     dependencies {
-        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-        implementation 'com.querydsl:querydsl-jpa'
+        if (dbType.equals(":module-jpa")) {
+            implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+            implementation 'com.querydsl:querydsl-jpa'
+        } else {
+            implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+        }
         implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
         implementation 'org.springframework.boot:spring-boot-starter-validation'
         implementation 'io.springfox:springfox-swagger2:2.6.1'
@@ -52,7 +59,7 @@ subprojects {
 project(':module-common') {
 }
 
-project(":module-jpa") {
+project(dbType) {
     dependencies {
         compile project(':module-common')
     }
@@ -62,6 +69,6 @@ project(':module-web') {
     apply plugin: 'war'
 
     dependencies {
-        compile project(":module-jpa")
+        compile project(dbType)
     }
 }
